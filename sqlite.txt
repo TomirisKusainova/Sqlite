@@ -1,0 +1,210 @@
+SQLite version 3.38.0 2022-02-22 18:58:40
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite> create table Books(
+   ...> id int primary key not null,
+   ...> author text,
+   ...> title text,
+   ...> publish_year int);
+sqlite>
+sqlite> create table Readers(
+   ...> id int primary key not null,
+   ...> name text);
+sqlite> create table Records(
+   ...> reader_id int,
+   ...> book_id int,
+   ...> taking_date text,
+   ...> returning_date text,
+   ...> FOREIGN key (reader_id) REFERENCES Readers (id),
+   ...> FOREIGN key (book_id) REFERENCES Books (id));
+sqlite> insert into Books
+   ...> values
+   ...> (1,"Пушкин", "Капитанская дочка","1815"),
+   ...> (2,"Лермонтов","Герой нашего времени","1823"),
+   ...> (3,"Достаевский","Преступление и наказание","1866");
+sqlite> insert into Readers
+   ...> values
+   ...> (1,"Петров"),
+   ...> (2,"Козлов"),
+   ...> (3,"Иванов");
+sqlite> insert into Records
+   ...> values
+   ...> (1, 1, "12.02.2022","27.02.2022"),
+   ...> (2, 1, "28.02.2022","03.03.2022"),
+   ...> (3, 3, "14.02.2022", "03.03.2022");
+sqlite> update records set taking_date="2022-02-12" where reader_id = 1;
+sqlite> update records set taking_date="2022-02-28" where reader_id = 2;
+sqlite> update records set taking_date="2022-02-14" where reader_id = 3;
+sqlite> update records set returning_date="2022-02-27" where reader_id = 1;
+sqlite> update records set returning_date="2022-03-03" where reader_id = 2;
+sqlite> update records set returning_date="2022-03-03" where reader_id = 3;
+sqlite> select id,title from Books
+   ...> join Records on book_id=id
+   ...> where date("now") < date(returning_date) and date("now") > date(taking_date);
+sqlite> insert into Records
+   ...> values
+   ...> (3, 3, "2022-02-05", "2022-03-20");
+sqlite> select id,title from Books
+   ...> join Records on book_id=id
+   ...> where date("now") < date(returning_date) and date("now") > date(taking_date);
+3|Преступление и наказание
+sqlite> select name, title from Readers
+   ...> join Records on readers_id = readers.id
+   ...> join Books on book_id = Books.id;
+Parse error: no such column: readers_id
+  select name, title from Readers join Records on readers_id = readers.id join B
+                                    error here ---^
+sqlite> select name, title from Readers
+   ...> join Records on reader_id = readers.id
+   ...> join Books on book_id = Books.id;
+Петров|Капитанская дочка
+Козлов|Капитанская дочка
+Иванов|Преступление и наказание
+Иванов|Преступление и наказание
+sqlite> select author, count(*) from Books
+   ...> group by author;
+Достаевский|1
+Лермонтов|1
+Пушкин|1
+sqlite> insert into Books
+   ...> values
+   ...> (4, "Пушкин", "Руслан и Людмила", 1822);
+sqlite> select author, count(*) from Books
+   ...> group by author;
+Достаевский|1
+Лермонтов|1
+Пушкин|2
+sqlite> select * from Bocks
+   ...> left join records on bocks_id=id;
+Parse error: no such table: Bocks
+sqlite> select * from Books
+   ...> left join records on books_id=id;
+Parse error: no such column: books_id
+sqlite> select * from Books
+   ...> left join records on book_id=id;
+1|Пушкин|Капитанская дочка|1815|1|1|2022-02-12|2022-02-27
+1|Пушкин|Капитанская дочка|1815|2|1|2022-02-28|2022-03-03
+2|Лермонтов|Герой нашего времени|1823||||
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-05|2022-03-20
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-14|2022-03-03
+4|Пушкин|Руслан и Людмила|1822||||
+sqlite> select * from Books
+   ...> right join records on book_id=id;
+Parse error: RIGHT and FULL OUTER JOINs are not currently supported
+sqlite> select * from records
+   ...> left join books on id=book_id;
+1|1|2022-02-12|2022-02-27|1|Пушкин|Капитанская дочка|1815
+2|1|2022-02-28|2022-03-03|1|Пушкин|Капитанская дочка|1815
+3|3|2022-02-14|2022-03-03|3|Достаевский|Преступление и наказание|1866
+3|3|2022-02-05|2022-03-20|3|Достаевский|Преступление и наказание|1866
+sqlite> select * from Books
+   ...> right join records on book_id=id
+   ...> union all
+   ...> select * from records
+   ...> left join books on id=book_id;
+Parse error: RIGHT and FULL OUTER JOINs are not currently supported
+sqlite> select * from Books
+   ...> left join records on book_id=id;
+1|Пушкин|Капитанская дочка|1815|1|1|2022-02-12|2022-02-27
+1|Пушкин|Капитанская дочка|1815|2|1|2022-02-28|2022-03-03
+2|Лермонтов|Герой нашего времени|1823||||
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-05|2022-03-20
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-14|2022-03-03
+4|Пушкин|Руслан и Людмила|1822||||
+sqlite> select * from Books
+   ...> left join records on book_id=id
+   ...> union all
+   ...> select * from records
+   ...> left join books on id=book_id;
+1|Пушкин|Капитанская дочка|1815|1|1|2022-02-12|2022-02-27
+1|Пушкин|Капитанская дочка|1815|2|1|2022-02-28|2022-03-03
+2|Лермонтов|Герой нашего времени|1823||||
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-05|2022-03-20
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-14|2022-03-03
+4|Пушкин|Руслан и Людмила|1822||||
+1|1|2022-02-12|2022-02-27|1|Пушкин|Капитанская дочка|1815
+2|1|2022-02-28|2022-03-03|1|Пушкин|Капитанская дочка|1815
+3|3|2022-02-14|2022-03-03|3|Достаевский|Преступление и наказание|1866
+3|3|2022-02-05|2022-03-20|3|Достаевский|Преступление и наказание|1866
+sqlite> select * from Books
+   ...> right join records on book_id=id
+   ...> union
+   ...> select * from records
+   ...> left join books on id=book_id;
+Parse error: RIGHT and FULL OUTER JOINs are not currently supported
+sqlite> select * from Books
+   ...> left join records on book_id=id
+   ...> union
+   ...> select * from records
+   ...> left join books on id=book_id;
+1|1|2022-02-12|2022-02-27|1|Пушкин|Капитанская дочка|1815
+1|Пушкин|Капитанская дочка|1815|1|1|2022-02-12|2022-02-27
+1|Пушкин|Капитанская дочка|1815|2|1|2022-02-28|2022-03-03
+2|1|2022-02-28|2022-03-03|1|Пушкин|Капитанская дочка|1815
+2|Лермонтов|Герой нашего времени|1823||||
+3|3|2022-02-05|2022-03-20|3|Достаевский|Преступление и наказание|1866
+3|3|2022-02-14|2022-03-03|3|Достаевский|Преступление и наказание|1866
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-05|2022-03-20
+3|Достаевский|Преступление и наказание|1866|3|3|2022-02-14|2022-03-03
+4|Пушкин|Руслан и Людмила|1822||||
+sqlite>         CREATE TABLE company(
+   ...>     id INT PRIMARY KEY NOT NULL,
+   ...>     name TEXT NOT NULL,
+   ...>     age INT NOT NULL,
+   ...>     address TEXT,
+   ...>     salary REAL DEFAULT 30000 CHECK(salary >= 0)
+   ...> );
+sqlite>
+sqlite> CREATE TABLE department(
+   ...>     id INT PRIMARY KEY NOT NULL,
+   ...>     dept TEXT NOT NULL,
+   ...>     emp_id INT NOT NULL,
+   ...>     FOREIGN KEY (emp_id) REFERENCES company (id)
+   ...> );
+sqlite> INSERT INTO company
+   ...> VALUES
+   ...>     (1, 'Paul', 32, 'California', 20000.00),
+   ...>     (2, 'Allen', 25, 'Texas', 15000.00),
+   ...>     (3, 'Teddy', 23, 'Norway', 20000.00),
+   ...>     (4, 'Mark', 25, 'Rich-Mond ', 65000.00),
+   ...>     (5, 'David', 27, 'Texas', 85000.00),
+   ...>     (6, 'Kim', 22, 'South-Hall', 45000.00),
+   ...>     (7, 'James', 24, 'Houston', 10000.00);
+sqlite>
+sqlite> INSERT INTO department
+   ...> VALUES
+   ...>     (1, 'IT Billing', 1),
+   ...>     (2, 'Engineering', 6),
+   ...>     (3, 'Finance', 5),
+   ...>     (4, 'HR', 5);
+sqlite> SELECT company.*, department.*
+   ...> from company
+   ...>  LEFT JOIN department
+   ...>  ON company.emp_id = department.id
+   ...> UNION ALL
+   ...> SELECT company.*, department.*
+   ...> from department
+   ...>  LEFT JOIN company
+   ...>  ON company.emp_id = department.id
+   ...> where company.id is NULL;
+Parse error: no such column: company.emp_id
+sqlite> SELECT company.*, department.*
+   ...> from company
+   ...>  LEFT JOIN department
+   ...>  ON company.id = department.emp_id
+   ...> UNION ALL
+   ...> SELECT company.*, department.*
+   ...> from department
+   ...>  LEFT JOIN company
+   ...>  ON company.id = department.emp_id
+   ...> where company.id is NULL;
+1|Paul|32|California|20000.0|1|IT Billing|1
+2|Allen|25|Texas|15000.0|||
+3|Teddy|23|Norway|20000.0|||
+4|Mark|25|Rich-Mond |65000.0|||
+5|David|27|Texas|85000.0|3|Finance|5
+5|David|27|Texas|85000.0|4|HR|5
+6|Kim|22|South-Hall|45000.0|2|Engineering|6
+7|James|24|Houston|10000.0|||
+sqlite>
